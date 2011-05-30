@@ -96,6 +96,9 @@ typedef enum _ASIS3ErrorType {
 // Returns a string for the hostname used for S3 requests. You shouldn't ever need to change this.
 + (NSString *)S3Host;
 
+// Returns a query string for the key and date.
++ (NSString *)queryStringForKey:(NSString*)key date:(NSDate*)date bucket:(NSString*)bucket;
+
 // This is called automatically before the request starts to build the request URL (if one has not been manually set already)
 - (void)buildURL;
 

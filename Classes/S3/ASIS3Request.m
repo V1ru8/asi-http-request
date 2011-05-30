@@ -297,6 +297,31 @@ static NSString *sharedSecretAccessKey = nil;
 	return @"s3.amazonaws.com";
 }
 
++ (NSString *)queryStringForKey:(NSString*)key date:(NSDate*)date bucket:(NSString*)bucket
+{
+    NSAssert(key != nil,@"Provided nil key to create a query");
+    NSString *canonicalizedResource = key;
+    if (bucket) {
+        canonicalizedResource = [NSString stringWithFormat:@"/%@/%@",bucket,key];
+    }
+    canonicalizedResource = [ASIS3Request stringByURLEncodingForS3Path:canonicalizedResource];
+    long timestamp = (long)[date timeIntervalSince1970];
+    NSString *timestampString = [NSString stringWithFormat:@"%ld",timestamp];
+    NSString *stringToSign = [NSString stringWithFormat:@"GET\n\n\n%@\n%@",
+                              timestampString,
+                              canonicalizedResource];
+    NSData *signature = [ASIS3Request HMACSHA1withKey:[ASIS3Request sharedSecretAccessKey] 
+                                            forString:stringToSign];
+    NSString *signatureBase64 = [ASIHTTPRequest base64forData:signature];
+    NSString *signatureURL = [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)signatureBase64, NULL, CFSTR(":?#[]@!$ &'()*+,;=\"<>%{}|\\^~`"), CFStringConvertNSStringEncodingToEncoding(NSUTF8StringEncoding)) autorelease];
+    NSString *query = [NSString stringWithFormat:@"?AWSAccessKeyId=%@&Expires=%@&Signature=%@",
+                       [ASIS3Request sharedAccessKey],
+                       timestampString,
+                       signatureURL];
+    
+    return query;    
+}
+
 - (void)buildURL
 {
 }
